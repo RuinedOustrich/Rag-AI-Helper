@@ -67,7 +67,7 @@ class DataBaseBuilder():
         Returns:
             Tuple[List[str], List[str], pd.DataFrame]: A tuple containing the splitted data, corresponding indices and a dataframe of the processed files.
         """
-        print("splitting")#dbdjsbfjdsbf
+
         data, files = extract_content_from_files(
                                                 self.path,
                                                 extension=self.extension,
