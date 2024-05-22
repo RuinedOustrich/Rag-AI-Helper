@@ -123,16 +123,16 @@ class Agent:
         max_k = self.config["agent"]["max_k"]
         
         contexts = []
-        url_out = self.dir_parser.parse(query)
+        dir_out = self.dir_parser.parse(query)
 
-        if url_out is not None:
-            contexts += url_out
+        if dir_out is not None:
+            contexts += dir_out
 
-        elif url_out is None and self.repo_retriever is not None:
+        elif dir_out is None and self.repo_retriever is not None:
             
             contexts = self.repo_retriever._get_relevant_documents(query)
 
-        elif len(contexts) < max_k or url_out is None and self.external_retriever is not None:
+        elif len(contexts) < max_k or dir_out is None and self.external_retriever is not None:
             contexts += self.external_retriever._get_relevant_documents(query)
 
         elif len(contexts) < max_k:
