@@ -1,0 +1,44 @@
+repo_database:
+  chunk_overlap: 0
+  chunk_size: 1000
+  extension: py
+  database_path: ./database
+  database_type: table
+  remove_docstr: False
+  splitter: code
+  retriever_kwargs:
+    search_type: similarity_score_threshold
+    search_kwargs:
+      k: 3
+      score_threshold: 0.5
+
+embedding:
+  embedding_type: HuggingFaceEmbedding
+  embedding_name_or_path: thenlper/gte-base
+
+prompt_qa: prompts,templates,prompt_qa.yaml
+prompt_complete: prompts,templates,prompt_complete.yaml
+
+llm:
+  n_ctx: 1024
+  verbose: False
+  f16_kv: True
+  n_gpu_layers: 25
+  max_tokens: 1024
+  temperature: 0.75
+  top_p: 1
+
+agent:
+  model_path: model,llm4.gguf
+  tokenizer_path: model,tokenizer
+  trim_context: True
+  max_k: 5
+
+external_database:
+  database_path: None
+  database_type: faiss
+  retriever_kwargs:
+    search_type: similarity_with_threshold
+    search_kwargs:
+    k: 3
+    score_threshold: 0.5

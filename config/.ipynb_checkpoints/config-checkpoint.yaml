@@ -1,0 +1,33 @@
+database:
+  chunk_overlap: 0
+  chunk_size: 1000
+  extension: py
+  path: ./
+  database_path: ./database
+  database_type: faiss
+  remove_docstr: False
+  splitter: Code
+
+
+retriever:
+  search_type: similarity_score_threshold
+  search_kwargs:
+    k: 3
+    score_threshold: 0.5
+
+embedding:
+  embedding_type: HuggingFaceEmbedding
+  embedding_name_or_path: 'Alibaba-NLP/gte-base-en-v1.5'
+
+prompt_qa: prompts,templates,prompt_qa.yaml
+prompt_complete: prompts,templates,prompt_complete.yaml
+
+llm:
+  n_ctx: 1024
+  verbose: False
+  max_tokens: 128
+  temperature: 0.75
+  top_p: 1
+
+model_path: model,wizardcoder-python-7b-v1.0.Q4_K_M.gguf
+tokenizer_path: model,tokenizer
