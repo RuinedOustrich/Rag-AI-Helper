@@ -1,4 +1,4 @@
 #!/bin/bash
 
-streamlit run run.py "$1"
+streamlit run run.py -- "$1"
 
