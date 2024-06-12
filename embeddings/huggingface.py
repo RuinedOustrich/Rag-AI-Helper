@@ -32,7 +32,7 @@ class HuggingFaceEmbeddings(BaseModel, Embeddings, extra='allow'):
     show_progress: bool = False
     """Whether to show a progress bar."""
 
-    def __init__(self, **kwargs: Any):
+    def __init__(self, path: str = None, **kwargs: Any,):
         """Initialize the sentence_transformer."""
         super().__init__(**kwargs)
         try:
@@ -44,9 +44,17 @@ class HuggingFaceEmbeddings(BaseModel, Embeddings, extra='allow'):
                 "Please install it with `pip install sentence-transformers`."
             ) from exc
 
-        self.client = sentence_transformers.SentenceTransformer(
-            self.model_name, cache_folder=self.cache_folder, **self.model_kwargs
+        if path is not None:
+            self.client = sentence_transformers.SentenceTransformer(
+            path,  **self.model_kwargs
         )
+        else:
+            self.client = sentence_transformers.SentenceTransformer(
+            self.model_name, cache_folder=self.cache_folder, **self.model_kwargs
+            )
+
+    def save(self, path):
+        self.client.save(path)
 
     def embed_documents(self, texts: List[str]) -> List[List[float]]:
         """Compute doc embeddings using a HuggingFace transformer model.

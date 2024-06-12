@@ -11,7 +11,7 @@ import torch
 import os
 
 class Agent:
-    def __init__(self, CONFIG_PATH: str, ROOT_DIR: str) -> None:
+    def __init__(self, path) -> None:
 
         """
         Initialize the Agent with the given configuration file path and root directory.
@@ -23,15 +23,18 @@ class Agent:
         Returns:
             None
         """
+        self.ROOT_DIR = os.path.dirname(os.path.abspath(__file__)).replace("pipeline", "")
+        self.CONFIG_PATH = os.path.join(self.ROOT_DIR, 'config', 'config.yaml')
+        self.config = load_config(self.CONFIG_PATH)
 
-        self.ROOT_DIR = ROOT_DIR
-        self.config = load_config(CONFIG_PATH)
+        if path == None:
+            self.config["repo_database"]["database_path"] = None
 
         self.language = EXT_TO_LANG[self.config['repo_database']['extension']]
 
         self.dir_parser = DirectoryParser(
                                         extension = self.config['repo_database']['extension'],
-                                        path = "./"
+                                        path = path
                                         )
         
         self.url_parser = UrlParser( 
@@ -39,17 +42,19 @@ class Agent:
                                     )
 
         device = "cuda" if torch.cuda.is_available() else "cpu"
-        
-        self.embedding_function = self.define_embedding(device)
-        
+        self.embedding_function = None
+
         if device != "cuda":
             self.config['repo_database']["database_type"] = "table"
-
+        
+        if self.config['repo_database']["database_type"] != "table" or self.config["repo_database"]["database_path"] != "None":
+            self.embedding_function = self.define_embedding(device)
+        
         self.external_retriever = None
-        self.repo_retrieve = None
+        self.repo_retriever = None
 
         if self.config["repo_database"]["database_path"] != "None":
-            self.repo_retriever = DataBaseBuilder(
+            self.repo_retriever = DataBaseBuilder(path = path, 
                                                     **self.config['repo_database'],
                                                     embedding_model=self.embedding_function
                                                 ).run()
@@ -59,15 +64,15 @@ class Agent:
                                                                         **self.config['external_database'], 
                                                                         embedding_model=self.embedding_function
                                                                     )
-
-        model_path = os.path.join(self.ROOT_DIR, *self.config['agent']['model_path'].split(','))
+            
+        model_path = os.path.join(self.ROOT_DIR, "model/model.gguf")
 
         self.llm = LlamaCpp(
                             model_path=model_path,
                             **self.config['llm']
                             )
 
-        tokenizer_path = os.path.join(self.ROOT_DIR, *self.config['agent']['tokenizer_path'].split(','))
+        tokenizer_path = os.path.join(self.ROOT_DIR, "model/tokenizer")
         self.tokenizer = AutoTokenizer.from_pretrained(tokenizer_path, use_fast = True)
 
     def define_embedding(self, device) -> Embeddings:
@@ -79,17 +84,12 @@ class Agent:
         Return the created embedding function.
         """
         #if self.config['database']['database_type'] != 'csv':
-        if self.config['embedding']['embedding_type'] == 'HuggingFaceEmbedding':
-                embedding_function = HuggingFaceEmbeddings(model_name=self.config['embedding']['embedding_name_or_path'],
-                                                           model_kwargs={"device": device},
-                                                           encode_kwargs={"device": device, 'batch_size': 64}
+        path = os.path.join(self.ROOT_DIR, "model/embedding")
+        embedding_function = HuggingFaceEmbeddings(path=path,
+                                                    model_kwargs={"device": device},
+                                                    encode_kwargs={"device": device, 'batch_size': 64}
                                                            )
-        else:
-                raise NotImplementedError
-
         return embedding_function
-
-        #return None
 
     def trim_context(self, context: str, query: str, prompt: str) -> str:
         """
@@ -147,9 +147,9 @@ class Agent:
 
         else:
             template = "You are an assistant for {language} code completion. Use the following pieces of retrieved context to complete the query.\nContext: {context}\n Query: {query}"
-
-        prompt_template = PromptTemplate(template=template, input_variables=["language", "context", "query"])
-
+        
+        prompt_template = PromptTemplate(template=template, input_variables=["language", "query", "context"])
+        
         if self.config["agent"]["trim_context"]:
             contexts, query = self.trim_context(contexts, query, template)
 

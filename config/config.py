@@ -19,19 +19,10 @@ def load_config(config_file):
         return config
 
 
-def create_config(config_file, config=None):
+def create_config(config_file, config: dict = None):
     """
     Create a new configuration file.
     """
-    if config is None:
-        config = {}
-        config['database'] = {}
-        config['database']['database_type'] = 'faiss'
-        config['database']['database_path'] = './database'
-        config['database']['remove_docstr'] = True
-        config['database']['chunk_size'] = 1000
-        config['database']['chunk_overlap'] = 0
-        config['database']['extension'] = 'py'
 
     with open(config_file, 'w') as f:
         yaml.safe_dump(config, f)

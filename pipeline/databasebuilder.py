@@ -21,7 +21,6 @@ class DataBaseBuilder():
                 embedding_model: Embeddings,
                 path: str = "./",
                 extension: str = 'py',
-                splitter: str = 'code',
                 remove_docstr: bool = False,
                 chunk_size: int = 1000,
                 chunk_overlap: int = 0,
@@ -45,7 +44,6 @@ class DataBaseBuilder():
 
         self.path = path
         self.extension = extension
-        self.splitter = splitter
         self.remove_docstr = remove_docstr
         self.chunk_size = chunk_size
         self.chunk_overlap = chunk_overlap
@@ -67,7 +65,6 @@ class DataBaseBuilder():
         Returns:
             Tuple[List[str], List[str], pd.DataFrame]: A tuple containing the splitted data, corresponding indices and a dataframe of the processed files.
         """
-
         data, files = extract_content_from_files(
                                                 self.path,
                                                 extension=self.extension,
@@ -75,18 +72,12 @@ class DataBaseBuilder():
                                                 file_list=file_list
                                                 )
 
-        if self.splitter == 'code':
-            splitter = CodeSplitter(
-                                    extension=self.extension,
-                                    chunk_size=self.chunk_size,
-                                    chunk_overlap=self.chunk_overlap
-                                    )
-        elif self.splitter == 'text':
-
-            splitter = TextSplitter(
-                                    chunk_size=self.chunk_size,
-                                    chunk_overlap=self.chunk_overlap,
-                                    )
+        splitter = CodeSplitter(
+                                extension=self.extension,
+                                chunk_size=self.chunk_size,
+                                chunk_overlap=self.chunk_overlap
+                                )
+    
             
         d = []
         splitted_data = []
@@ -116,7 +107,6 @@ class DataBaseBuilder():
         """
         splitted_data, idxs, d = self.split_data()
 
-        print("Building database...")
         os.mkdir(self.database_path) if not os.path.exists(self.database_path) else None
         if self.database_type == 'chroma':
             vectorstore = Chroma.from_texts(splitted_data,

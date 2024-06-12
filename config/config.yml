@@ -1,7 +1,0 @@
-database:
-  chunk_overlap: 0
-  chunk_size: 1000
-  database_path: ./database
-  database_type: faiss
-  extension: py
-  remove_docstr: true

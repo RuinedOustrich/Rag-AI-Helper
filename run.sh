@@ -1,3 +1,4 @@
 #!/bin/bash
 
-python main.py
+streamlit run run.py "$1"
+
